@@ -125,8 +125,15 @@ class CarEnv:
         self.client = carla.Client("localhost",2000)
         self.client.set_timeout(4.0)
         self.world = self.client.get_world()
+        
+        settings = self.world.get_settings()
+        settings.no_rendering_mode = True
+        self.world.apply_settings(settings)
+
         self.blueprint_library = self.world.get_blueprint_library()
         self.model_3 = self.blueprint_library.filter("model3")[0]
+
+        
 
     def reset(self):
         self.collision_hist = []
