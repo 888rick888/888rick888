@@ -129,7 +129,7 @@ class CarEnv:
         self.model_3 = self.blueprint_library.filter("model3")[0]
 
     def reset(self):
-        self.collsion_hist = []
+        self.collision_hist = []
         self.actor_list = []
 
         self.transform = random.choice(self.world.get_map().get_spawn_points())
@@ -272,6 +272,7 @@ class DQNAgent:
 
             x.append(current_state)
             y.append(current_qs)
+            print("check this outOOOOOOOOOOOOOOOOOOOOOO",x,y)
         
         log_this_step = False
         if self.tensorboard.step > self.last_logged_episode:
@@ -329,18 +330,19 @@ if __name__ =='__main__':
 
     agent = DQNAgent()
     env = CarEnv()
-    print("Begin Thread")
+    print("----------Begin Thread")
     trainer_thread = Thread(target=agent.train_in_loop,daemon=True)
     trainer_thread.start()
 
-    print("Sleep")
+    print("------------Sleep")
     while not agent.training_initialized:
         time.sleep(0.01)
 
-    print("Get QS")
+    print("-----------Get QS")
     agent.get_qs(np.ones((env.im_height,env.im_width, 3)))
+    print("check this outOOOOOOOOOOOOOOOOOOOOOO",agent.get_qs)
 
-    print("Begin Episode")
+    print("-----------Begin Episode")
     for episode in tqdm(range(1,EPISODE+1),ascii=True,unit="episodes"):
         env.collision_hist = []
         agent.tensorboard.step  = episode
@@ -348,7 +350,7 @@ if __name__ =='__main__':
         step=1
         current_state = env.reset()
         done = False
-        spisode_start = time.time()
+        episode_start = time.time()
         
         while True:
             if np.random.random() > epsilon:
