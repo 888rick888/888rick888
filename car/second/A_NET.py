@@ -66,4 +66,3 @@ class ActorNet(object):
         model_A.reset_metrics()
         model_A.compile(loss="mse",optimizer=Adam(learning_rate=0.001),metrics=["acc"])
         return model_A, S_input_A, model_A.trainable_weights
-
