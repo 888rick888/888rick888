@@ -1,15 +1,5 @@
-# ...
-
-
-# .step(action)
-
-
-# ...
-
-# def reset(self):
-
-# def step(self,action):
-#     return obs,reward,done,extra_info
+#from bilibili 
+#source core ---https://pythonprogramming.net/reinforcement-learning-self-driving-autonomous-cars-carla-python/
 
 import glob
 import os
@@ -37,7 +27,7 @@ from tensorflow.keras.callbacks import TensorBoard
 from tqdm import tqdm
 
 import tensorflow.compat.v1.keras.backend as backend
-from threading import Thread
+# from threading import Thread
 
 
 
@@ -127,7 +117,7 @@ class CarEnv:
         self.world = self.client.get_world()
         
         settings = self.world.get_settings()
-        settings.no_rendering_mode = True
+        settings.no_rendering_mode = False
         self.world.apply_settings(settings)
 
         self.blueprint_library = self.world.get_blueprint_library()
@@ -139,7 +129,7 @@ class CarEnv:
         self.collision_hist = []
         self.actor_list = []
 
-        self.transform = random.choice(self.world.get_map().get_spawn_points())
+        self.transform = random.choice(self.world.get_map().get_spawn_points()[10:50])
         self.vehicle = self.world.spawn_actor(self.model_3, self.transform)
 
         self.actor_list.append(self.vehicle)
@@ -279,13 +269,13 @@ class DQNAgent:
 
             x.append(current_state)
             y.append(current_qs)
-            print("check this outOOOOOOOOOOOOOOOOOOOOOO",x,y)
+            print("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",current_qs[action])
         
         log_this_step = False
         if self.tensorboard.step > self.last_logged_episode:
             log_this_step = True
             self.last_log_episode = self.tensorboard.step
-
+            
         with self.graph.as_default():
             backend.get_session().run(tf.global_variables_initializer())
             self.model.fit(np.array(x)/255,np.array(y),batch_size=TRAINING_BATCH_SIZE,verbose=0,shuffle=False,callbacks=[self.tensorboard] if log_this_step else None)
@@ -337,22 +327,18 @@ if __name__ =='__main__':
 
     agent = DQNAgent()
     env = CarEnv()
-    print("----------Begin Thread")
-    trainer_thread = Thread(target=agent.train_in_loop,daemon=True)
-    trainer_thread.start()
+    # trainer_thread = Thread(target=agent.train_in_loop,daemon=True)
+    # trainer_thread.start()
 
-    print("------------Sleep")
-    while not agent.training_initialized:
+    while  agent.training_initialized:
         time.sleep(0.01)
 
-    print("-----------Get QS")
     agent.get_qs(np.ones((env.im_height,env.im_width, 3)))
-    print("check this outOOOOOOOOOOOOOOOOOOOOOO",agent.get_qs)
-
-    print("-----------Begin Episode")
+    # print("check this outOOOOOOOOOOOOOOOOOOOOOO",agent.get_qs(np.ones((env.im_height,env.im_width, 3))))
+    
     for episode in tqdm(range(1,EPISODE+1),ascii=True,unit="episodes"):
         env.collision_hist = []
-        agent.tensorboard.step  = episode
+        # agent.tensorboard.step  = episode
         episode_reward=0
         step=1
         current_state = env.reset()
@@ -365,7 +351,7 @@ if __name__ =='__main__':
             else:
                 action = np.random.randint(0,3)
                 time.sleep(1/FPS)
-
+            # print(action)
             new_state,reward,done,_ = env.step(action)
 
             episode_reward += reward
@@ -383,7 +369,7 @@ if __name__ =='__main__':
             average_reward = sum(ep_rewards[-AGGREGATE_STATS_EVERY:])/len(ep_rewards[-AGGREGATE_STATS_EVERY:])
             min_reward = min(ep_rewards[-AGGREGATE_STATS_EVERY:])
             max_reward = max(ep_rewards[-AGGREGATE_STATS_EVERY:])
-            agent.tensorboard.update_stats(reward_avg=average_reward, reward_min=min_reward, reward_max=max_reward, epsilon=epsilon)
+            # agent.tensorboard.update_stats(reward_avg=average_reward, reward_min=min_reward, reward_max=max_reward, epsilon=epsilon)
 
             #Save model, but only when min reward is greater or equal a set value
             if min_reward >= MIN_REWARD:
@@ -394,7 +380,7 @@ if __name__ =='__main__':
             epsilon = max(MIN_EPSILON,epsilon)
 
     agent.terminate = True
-    trainer_thread.join()
+    # trainer_thread.join()
     agent.model.save(f'model/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg__{min_reward:_>7.2f}min__{int(time.time())}.model')
     
 
